@@ -48,10 +48,23 @@ app.get('/api/v3/app/events', async (req, res) => {
 app.post('/api/v3/app/events', upload.single('files[image]'), async (req, res) => {
     try {
         const { name, tagline, schedule, description, moderator, category, sub_category, rigor_rank } = req.body;
+        
+        //checking whether the required fields are provided
+        
+        if (!name || !tagline || !schedule || !description || !moderator || !category || !sub_category || !rigor_rank) {
+            return res.status(400).json({ message: 'All fields are required' });
+        }
+
+        //check rigor is an integer
+        const rigorRankInt = parseInt(rigor_rank);
+        if (isNaN(rigorRankInt)) {
+            return res.status(400).json({ message: 'rigor_rank must be a number' });
+        }
+
         const attendees = [];
         const image = req.file ? req.file.path : null;
         
-        const event = { type: 'event', name, tagline, schedule, description, image, moderator, category, sub_category, rigor_rank: parseInt(rigor_rank), attendees };
+        const event = { type: 'event', name, tagline, schedule, description, image, moderator, category, sub_category, rigor_rank: rigorRankInt, attendees };
         const result = await db.collection('events').insertOne(event);
         
         res.status(201).json({ eventId: result.insertedId });
